@@ -15,6 +15,7 @@ func GetPartners() (partners []model.Partner) {
 		return
 	}
 
+	capacities := GetPartnerCapacity()
 	partners = make([]model.Partner, 0)
 	partnerIndexes := make(map[string]int)
 
@@ -25,17 +26,17 @@ func GetPartners() (partners []model.Partner) {
 		theatreId := strings.TrimSpace(content[0])
 		theatre := model.Theatre{ID: theatreId}
 
-		capacity := strings.Split(strings.TrimSpace(content[1]), "-")
-		minCap, _ := strconv.Atoi(strings.TrimSpace(capacity[0]))
-		maxCap, _ := strconv.Atoi(strings.TrimSpace(capacity[1]))
+		slab := strings.Split(strings.TrimSpace(content[1]), "-")
+		fromSlab, _ := strconv.Atoi(strings.TrimSpace(slab[0]))
+		toSlab, _ := strconv.Atoi(strings.TrimSpace(slab[1]))
 		minCost, _ := strconv.Atoi(strings.TrimSpace(content[2]))
 		costPerUnit, _ := strconv.Atoi(strings.TrimSpace(content[3]))
 
 		tariff := model.Tariff{
 			MinCost:     minCost,
 			CostPerUnit: costPerUnit,
-			From:        minCap,
-			To:          maxCap,
+			From:        fromSlab,
+			To:          toSlab,
 		}
 
 		partnerIndex, present := partnerIndexes[partnerId]
@@ -44,12 +45,32 @@ func GetPartners() (partners []model.Partner) {
 			p.AddTheatreTariff(theatre, tariff)
 		} else {
 			p := model.Partner{
-				ID: partnerId,
+				ID:       partnerId,
+				Capacity: capacities[partnerId],
 			}
 			p.AddTheatreTariff(theatre, tariff)
 			partners = append(partners, p)
 			partnerIndexes[p.ID] = len(partners) - 1
 		}
+	}
+
+	return
+}
+
+func GetPartnerCapacity() (capacities map[string]int) {
+	capacities = make(map[string]int, 0)
+
+	contents, err := ReadCSV("/data/capacities.csv")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for i := 1; i < len(contents); i++ {
+		content := contents[i]
+		partnerId := strings.TrimSpace(content[0])
+		capacity, _ := strconv.Atoi(strings.TrimSpace(content[1]))
+		capacities[partnerId] = capacity
 	}
 
 	return
