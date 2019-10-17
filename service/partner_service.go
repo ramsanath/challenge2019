@@ -1,13 +1,16 @@
 package service
 
 import (
-	"fmt"
 	"qube/model"
 )
 
-func FindBestPartner(request model.DeliveryRequest, partners []model.Partner) {
-	var bestCost *int = nil
-	var bestPartner *model.Partner = nil
+func FindBestPartner(request model.DeliveryRequest, partners []model.Partner) (result model.BestDelivery) {
+	result = model.BestDelivery{
+		Delivery: request.ID,
+		Possible: false,
+		Partner:  "",
+		Cost:     -1,
+	}
 
 	for pI := range partners {
 		p := partners[pI]
@@ -15,18 +18,17 @@ func FindBestPartner(request model.DeliveryRequest, partners []model.Partner) {
 		if cost == nil {
 			continue
 		}
-		if bestPartner == nil || *cost < *bestCost {
-			bestCost = cost
-			bestPartner = &p
+		if !result.Possible || *cost < result.Cost {
+			result = model.BestDelivery{
+				Delivery: request.ID,
+				Possible: true,
+				Partner:  p.ID,
+				Cost:     *cost,
+			}
 		}
 	}
 
-	if bestCost != nil {
-		fmt.Printf("Best partner is %s\n", bestPartner.ID)
-		fmt.Printf("Best cost is %d\n", *bestCost)
-	} else {
-		fmt.Println("Delivery not possible")
-	}
+	return
 }
 
 func GetQuote(request model.DeliveryRequest, p model.Partner) (cost *int) {

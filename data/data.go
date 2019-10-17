@@ -54,3 +54,30 @@ func GetPartners() (partners []model.Partner) {
 
 	return
 }
+
+func GetInput() (requests []model.DeliveryRequest) {
+	contents, err := ReadCSV("/data/input.csv")
+	requests = make([]model.DeliveryRequest, 0)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for i := 0; i < len(contents); i++ {
+		content := contents[i]
+
+		deliveryId := strings.TrimSpace(content[0])
+		units, _ := strconv.Atoi(strings.TrimSpace(content[1]))
+		theatreId := strings.TrimSpace(content[2])
+
+		dr := model.DeliveryRequest{
+			ID:       deliveryId,
+			Quantity: units,
+			Theatre:  model.Theatre{ID: theatreId},
+		}
+		requests = append(requests, dr)
+	}
+
+	return
+}
